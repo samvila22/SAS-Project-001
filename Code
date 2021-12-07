@@ -1,0 +1,60 @@
+/*****************************************************************************
+* Name:        Sam Vila
+* Assignment:  Midterm Project
+*****************************************************************************/
+
+libname data "/home/u59504701/sasuser.v94/Midterm";
+
+/* *We'll first create the correlation macro with variable (year); */
+%macro correlation(year);
+data newgapminder;
+set data.gapminder_data;
+if year = &gyear;
+xgdp = gdp;
+yLifeExpentancy = life_exp;
+run;
+
+data animation;
+function="text";
+label="&gyear";
+x1=54;
+y1=98;
+textweight="bold";
+run;
+proc sgplot data = newgapminder sganno=animation;
+
+title "GDP per Capita vs Life Expentancy based off region";
+Scatter x =xgdp y=yLifeExpentancy/ group = four_regions MARKERATTRS= (size = 7px) MARKERATTRS= (symbol = "circlefilled");
+reg x = xgdp y =yLifeExpentancy / group = four_regions transparency=.5;
+keylegend/ title = "Regions";
+xaxis label = "GDP per Capita";
+yaxis label = "Life Expentancy";
+run;
+
+%mend correlation;
+    
+/* Graphs macro */
+%macro year_GDPGraph (start, stop);
+%local gyear;
+%do gyear = &start %to &stop;
+%correlation(gyear);
+%end;
+run;
+%mend year_GDPGraph;
+
+options printerpath=gif animation=stop;
+ods printer close;
+
+/* *Set the animation speed at .5 seconds per image over the loop as well as set the collection as a gif; */
+options nodate nonumber
+        animduration=0.5 animloop=yes noanimoverlay
+        printerpath=gif animation=start;
+ods printer file = "/home/u59504701/sasuser.v94/Midterm/YearLifeGDP.gif";
+
+/* *make the animation of graphs go from 1990 to 2018; */
+%year_GDPGraph(1990,2019);
+ 
+ 
+options printerpath=gif animation=stop;
+ods printer close;
+
